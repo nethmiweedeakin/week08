@@ -50,10 +50,12 @@ jobs:
 
       - name: Update backend images with new tag
         run: |
-          kubectl set image deployment/product-service-w08e1 product-service=${{ env.ACR_LOGIN_SERVER }}/product_service:${{ env.IMAGE_TAG }}
+          PRODUCT_CONTAINER=$(kubectl get deployment product-service-w08e1 -o jsonpath='{.spec.template.spec.containers[0].name}')
+          kubectl set image deployment/product-service-w08e1 $PRODUCT_CONTAINER=${{ env.ACR_LOGIN_SERVER }}/product_service:${{ env.IMAGE_TAG }}
           kubectl rollout status deployment/product-service-w08e1
 
-          kubectl set image deployment/order-service-w08e1 order-service=${{ env.ACR_LOGIN_SERVER }}/order_service:${{ env.IMAGE_TAG }}
+          ORDER_CONTAINER=$(kubectl get deployment order-service-w08e1 -o jsonpath='{.spec.template.spec.containers[0].name}')
+          kubectl set image deployment/order-service-w08e1 $ORDER_CONTAINER=${{ env.ACR_LOGIN_SERVER }}/order_service:${{ env.IMAGE_TAG }}
           kubectl rollout status deployment/order-service-w08e1
 
 
