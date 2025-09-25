@@ -13,8 +13,7 @@ jobs:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
     env:
       ACR_LOGIN_SERVER: ${{ secrets.AZURE_CONTAINER_REGISTRY }}
-      IMAGE_NAME: backend-service
-      IMAGE_TAG: ${{ github.sha }}
+      IMAGE_TAG: ${{ github.event.workflow_run.head_sha }}
 
     steps:
       - name: Checkout repository
@@ -27,12 +26,35 @@ jobs:
 
       - name: Set AKS context
         run: |
-          az aks get-credentials --resource-group ${{ secrets.AKS_RESOURCE_GROUP }} --name ${{ secrets.AKS_CLUSTER_NAME }} --overwrite-existing
+          az aks get-credentials \
+            --resource-group ${{ secrets.AKS_RESOURCE_GROUP }} \
+            --name ${{ secrets.AKS_CLUSTER_NAME }} \
+            --overwrite-existing
 
-      - name: Deploy backend to AKS
+      - name: Attach ACR to AKS (if not already attached)
         run: |
-          kubectl set image deployment/backend-deployment backend=${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
-          kubectl rollout status deployment/backend-deployment
+          az aks update \
+            --name ${{ secrets.AKS_CLUSTER_NAME }} \
+            --resource-group ${{ secrets.AKS_RESOURCE_GROUP }} \
+            --attach-acr ${{ secrets.AZURE_CONTAINER_REGISTRY }}
+
+      - name: Deploy Backend Manifests (ensure resources exist)
+        run: |
+          cd k8s/
+          kubectl apply -f configmaps.yaml
+          kubectl apply -f secrets.yaml
+          kubectl apply -f product-db.yaml
+          kubectl apply -f order-db.yaml
+          kubectl apply -f product-service.yaml
+          kubectl apply -f order-service.yaml
+
+      - name: Update backend images with new tag
+        run: |
+          kubectl set image deployment/product-service-deployment product-service=${{ env.ACR_LOGIN_SERVER }}/product_service:${{ env.IMAGE_TAG }}
+          kubectl rollout status deployment/product-service-deployment
+
+          kubectl set image deployment/order-service-deployment order-service=${{ env.ACR_LOGIN_SERVER }}/order_service:${{ env.IMAGE_TAG }}
+          kubectl rollout status deployment/order-service-deployment
 
       - name: Logout from Azure
         run: az logout
