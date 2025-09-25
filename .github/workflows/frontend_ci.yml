@@ -1,19 +1,19 @@
 name: Frontend CI - Build & Push Image
 
 on:
-  workflow_dispatch:
   pull_request:
     branches:
-      - main
+      - development
     paths:
       - 'frontend/**'
-      - '.github/workflows/frontend_ci.yml'
+      - '.github/workflows/frontend-ci.yml'
   push:
     branches:
-      - main
+      - development
     paths:
       - 'frontend/**'
-      - '.github/workflows/frontend_ci.yml'
+      - '.github/workflows/frontend-ci.yml'
+  workflow_dispatch:
 
 env:
   ACR_LOGIN_SERVER: ${{ secrets.AZURE_CONTAINER_REGISTRY }}

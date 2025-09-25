@@ -1,17 +1,16 @@
-name: Backend CD
+name: Backend CD - Deploy to AKS
 
 on:
-  push:
-    branches:
-      - main
-    paths:
-      - 'backend/**'
-      - '.github/workflows/backend-cd.yml'
+  workflow_run:
+    workflows: ["Backend CI - Test, Build and Push Images to ACR"]
+    types:
+      - completed
   workflow_dispatch:
 
 jobs:
-  build-and-deploy-backend:
+  deploy_backend:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     env:
       ACR_LOGIN_SERVER: ${{ secrets.AZURE_CONTAINER_REGISTRY }}
       IMAGE_NAME: backend-service
@@ -25,17 +24,6 @@ jobs:
         uses: azure/login@v1
         with:
           creds: ${{ secrets.AZURE_CREDENTIALS }}
-
-      - name: Docker login to ACR
-        run: az acr login --name ${{ env.ACR_LOGIN_SERVER }}
-
-      - name: Build backend Docker image
-        run: |
-          docker build -t ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} ./backend
-          docker tag ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:latest
-
-      - name: Push backend image to ACR
-        run: docker push ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }} --all-tags
 
       - name: Set AKS context
         run: |

@@ -1,6 +1,10 @@
-name: CD - Deploy Frontend to AKS
+name: Frontend CD - Deploy to AKS
 
 on:
+  workflow_run:
+    workflows: ["Frontend CI - Build & Push Image"]
+    types:
+      - completed
   workflow_dispatch:
     inputs:
       product_api_ip:
@@ -15,24 +19,11 @@ on:
       aks_resource_group:
         description: 'Resource Group Name'
         required: true
-  workflow_call:
-    inputs:
-      product_api_ip:
-        required: true
-        type: string
-      order_api_ip:
-        required: true
-        type: string
-      aks_cluster_name:
-        required: true
-        type: string
-      aks_resource_group:
-        required: true
-        type: string
 
 jobs:
   deploy_frontend:
     runs-on: ubuntu-latest
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
     environment: Production
 
     steps:
