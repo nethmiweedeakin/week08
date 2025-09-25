@@ -50,11 +50,12 @@ jobs:
 
       - name: Update backend images with new tag
         run: |
-          kubectl set image deployment/product-service-deployment product-service=${{ env.ACR_LOGIN_SERVER }}/product_service:${{ env.IMAGE_TAG }}
-          kubectl rollout status deployment/product-service-deployment
+          kubectl set image deployment/product-service-w08e1 product-service=${{ env.ACR_LOGIN_SERVER }}/product_service:${{ env.IMAGE_TAG }}
+          kubectl rollout status deployment/product-service-w08e1
 
-          kubectl set image deployment/order-service-deployment order-service=${{ env.ACR_LOGIN_SERVER }}/order_service:${{ env.IMAGE_TAG }}
-          kubectl rollout status deployment/order-service-deployment
+          kubectl set image deployment/order-service-w08e1 order-service=${{ env.ACR_LOGIN_SERVER }}/order_service:${{ env.IMAGE_TAG }}
+          kubectl rollout status deployment/order-service-w08e1
+
 
       - name: Logout from Azure
         run: az logout
